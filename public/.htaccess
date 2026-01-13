@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Si le fichier ou dossier existe réellement dans public/, le servir directement (normal)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Sinon, tout router vers index.php (qui gérera les vues, audios, dataset, etc.)
+RewriteRule ^ index.php [L]

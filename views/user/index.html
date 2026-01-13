@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data-collection-wolof</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Recensement de données Wolof en Français</h1>
+    <p>Ajoutez vos enregistrements pour enrichir notre base linguistique.</p>
+  </header>
+
+  <main class="new-layout">
+    
+    <section class="recorder-section">
+      <div class="recorder-circle" id="recorderCircle">
+        <svg class="mic-icon" viewBox="0 0 24 24" width="100" height="100">
+          <path fill="white" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path fill="white" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+        <div class="wave-animation"></div>
+        <p class="recorder-text" id="recorderText">Cliquez pour enregistrer</p>
+      </div>
+       <button id="fallbackUploadBtn" class="fallback-btn">Ou uploader un fichier</button>
+    </section>
+
+    <section class="form-section">
+      <form id="dataForm" enctype="multipart/form-data">
+        <label for="audioInput" id="audioLabel">Fichier audio :</label>
+        <input type="file" id="audioInput" name="audio" accept="audio/*" style="display:none;" required />
+
+        <label for="transcription">Transcription :</label>
+        <textarea id="transcription" name="transcription" placeholder="Écrivez ici la transcription exacte de l'audio..." required></textarea>
+
+        <label for="traduction">Traduction :</label>
+        <textarea id="traduction" name="traduction" placeholder="Écrivez ici la traduction..." required></textarea>
+
+        <button type="submit">Envoyer</button>
+      </form>
+
+      <div id="message"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Projet IA Wolof en Français | Collecte linguistique</p>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>

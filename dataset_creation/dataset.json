@@ -1,0 +1,17 @@
+[
+    {
+        "audio_path": "dataset_creation\/audios\/8DF68D8F-2436-49E3-A.wav",
+        "transcription": "et voilà",
+        "traduction": "et voilà encore"
+    },
+    {
+        "audio_path": "dataset_creation\/audios\/8CA19FE2-FF92-448A-B.wav",
+        "transcription": "revoilà",
+        "traduction": "revoilà encore"
+    },
+    {
+        "audio_path": "dataset_creation\/audios\/C05E514D-7FDD-4D4C-A.wav",
+        "transcription": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi ex tempora nam consequuntur nostrum? Aliquam accusantium quis voluptas earum quo error saepe impedit officia ducimus accusamus vel repellat, dicta vero.",
+        "traduction": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi ex tempora nam consequuntur nostrum? Aliquam accusantium quis voluptas earum quo error saepe impedit officia ducimus accusamus vel repellat, dicta vero."
+    }
+]
