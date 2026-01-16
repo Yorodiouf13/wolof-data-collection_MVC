@@ -8,10 +8,10 @@
 </head>
 <body>
 
-  <header>
+  <div class="header">
     <h1>Recensement de données Wolof en Français</h1>
     <p>Ajoutez vos enregistrements pour enrichir notre base linguistique.</p>
-  </header>
+  </div>
 
   <main class="new-layout">
     
@@ -25,12 +25,21 @@
         <p class="recorder-text" id="recorderText">Cliquez pour enregistrer</p>
       </div>
        <button id="fallbackUploadBtn" class="fallback-btn">Ou uploader un fichier</button>
+
+      
     </section>
 
     <section class="form-section">
       <form id="dataForm" enctype="multipart/form-data">
         <label for="audioInput" id="audioLabel">Fichier audio :</label>
         <input type="file" id="audioInput" name="audio" accept="audio/*" style="display:none;" required />
+        <div id="fileDisplay" class="file-display">
+          <p id="fileNameDisplay">Aucun fichier sélectionné</p>
+          <div id="audioPreview" class="audio-preview hidden">
+            <audio id="previewPlayer" controls></audio>
+            <button id="reRecordBtn" class="re-record-btn">Refaire l’enregistrement</button>
+          </div>
+        </div>
 
         <label for="transcription">Transcription :</label>
         <textarea id="transcription" name="transcription" placeholder="Écrivez ici la transcription exacte de l'audio..." required></textarea>
@@ -46,9 +55,9 @@
   </main>
 
   <footer>
-    <p>© 2025 Projet IA Wolof en Français | Collecte linguistique</p>
+    <p>© 2025 Projet IA Wolof par SOLID Afrique | Collecte linguistique</p>
   </footer>
 
-  <script src="/script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <?php
-// public/index.php - Point d'entrée unique
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 require_once __DIR__ . '/../controllers/AudioController.php';
 
@@ -7,8 +8,12 @@ $controller = new AudioController();
 
 // Récupération de l'URI une seule fois
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = ltrim($uri, '/'); // ex. : "", "style.css", "get-audios", "audios/monfichier.wav"
+$uri = ltrim($uri, '/');
 
+$basePath = 'collecte_data_wolof_mvc/public/';
+if (strpos($uri, $basePath) === 0) {
+    $uri = substr($uri, strlen($basePath));
+}
 // ==================== ROUTES API ====================
 $apiRoutes = ['get-audios', 'upload', 'delete-audio', 'export-dataset'];
 if (in_array($uri, $apiRoutes)) {
@@ -61,14 +66,16 @@ if ($uri === 'dataset.json') {
 $viewsPath = __DIR__ . '/../views/';
 
 $staticFiles = [
-    ''                   => 'user/index.html',
-    'index.html'         => 'user/index.html',
-    'style.css'          => 'user/style.css',
-    'script.js'          => 'user/script.js',
-    'admin.html'         => 'admin/admin.html',
-    'style_admin.css'    => 'admin/style_admin.css',
-    'script_admin.js'    => 'admin/script_admin.js',
+    ''            => 'user/index.html',
+    'index.php'   => 'user/index.html',
+    'index.html'  => 'user/index.html',
+    'style.css'   => 'user/style.css',
+    'script.js'   => 'user/script.js',
+    'admin.html'  => 'admin/admin.html',
+    'style_admin.css' => 'admin/style_admin.css',
+    'script_admin.js' => 'admin/script_admin.js',
 ];
+
 
 if (array_key_exists($uri, $staticFiles)) {
     $filePath = $viewsPath . $staticFiles[$uri];
@@ -86,7 +93,7 @@ if (array_key_exists($uri, $staticFiles)) {
         readfile($filePath);
         exit;
     } else {
-        // Fichier manquant (utile pour debug)
+
         http_response_code(500);
         echo "Fichier introuvable sur le serveur : " . $staticFiles[$uri];
         exit;
@@ -96,4 +103,10 @@ if (array_key_exists($uri, $staticFiles)) {
 // ==================== 404 ====================
 http_response_code(404);
 echo json_encode(["status" => "error", "message" => "Ressource non trouvée."]);
+
 ?>
+
+
+
+
+

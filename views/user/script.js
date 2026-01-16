@@ -1,14 +1,18 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("dataForm");
   const audioInput = document.getElementById("audioInput");
   const recorderCircle = document.getElementById("recorderCircle");
   const recorderText = document.getElementById("recorderText");
   const fallbackBtn = document.getElementById("fallbackUploadBtn");
+  const fileNameDisplay = document.getElementById("fileNameDisplay");
+  const audioPreview = document.getElementById("audioPreview");
+  const previewPlayer = document.getElementById("previewPlayer");
+  const reRecordBtn = document.getElementById("reRecordBtn");
 
   let mediaRecorder = null;
   let audioChunks = [];
 
-  const fileNameDisplay = document.createElement("p");
   fileNameDisplay.className = "file-name-display";
   fileNameDisplay.textContent = "Aucun fichier sélectionné";
   audioInput.parentNode.insertBefore(fileNameDisplay, audioInput.nextSibling);
@@ -55,7 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const dt = new DataTransfer();
           dt.items.add(file);
           audioInput.files = dt.files;
+          audioInput.dispatchEvent(new Event("change"));
 
+          // Afficher le player
+          const audioUrl = URL.createObjectURL(audioBlob);
+          previewPlayer.src = audioUrl;
+          audioPreview.classList.remove("hidden");
+          
           // Réinitialiser l'interface
           recorderCircle.classList.remove("recording");
           recorderText.textContent = "Enregistrement terminé !";
@@ -67,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         mediaRecorder.start();
         recorderCircle.classList.add("recording");
-        recorderText.textContent = "Enregistrement en cours... Cliquez pour arrêter";
+        recorderText.textContent = "En cours... Cliquez pour arrêter";
       } catch (err) {
         console.error("Erreur accès microphone :", err);
         showPopup("Impossible d'accéder au microphone. Vérifiez les permissions.", "error");
@@ -93,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showPopup("Envoi en cours...", "info");
 
     try {
-      const response = await fetch("/upload", {
+      const response = await fetch("upload", {
         method: "POST",
         body: formData,
         cache: "no-store"
@@ -124,9 +134,22 @@ document.addEventListener("DOMContentLoaded", () => {
       showPopup("Erreur de connexion au serveur. Vérifiez votre connexion internet.", "error");
     }
   });
+
+  reRecordBtn.addEventListener("click", () => {
+  audioPreview.classList.add("hidden");
+  previewPlayer.src = ""; 
+  audioInput.value = ""; 
+  fileNameDisplay.textContent = "Aucun fichier sélectionné";
+  recorderText.textContent = "Cliquez pour enregistrer";
+  recorderCircle.classList.remove("recording");
+  document.getElementById("transcription").value = "";
+  document.getElementById("traduction").value = "";
 });
 
-// Fonction popup (inchangée)
+});
+
+
+// Fonction popup 
 function showPopup(message, type = "info") {
   const popup = document.createElement("div");
   popup.className = `popup ${type}`;

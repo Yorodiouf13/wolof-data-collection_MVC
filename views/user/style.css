@@ -13,18 +13,18 @@ body {
   flex-direction: column;
   min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #ffa600, #ffc400ff); 
 }
 
 
-header {
-  background-color: #ffa600;
+.header {
   color: white;
   text-align: center;
   padding: 1.5em 1em;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-header h1 {
+.header h1 {
   margin-bottom: 5px;
 }
 
@@ -96,7 +96,7 @@ main.new-layout {
 
 
 .wave-animation {
-  position: absolute;
+  position: relative;
   inset: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -109,11 +109,11 @@ main.new-layout {
 .wave-animation::before,
 .wave-animation::after {
   content: '';
-  position: absolute;
+  position: relative;
   top: 50%;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
+  width: 50%;
+  height: 50%;
+  border-radius: 100%;
   border: 3px solid rgba(255, 255, 255, 0.4);
   animation: wave 2s infinite ease-out;
 }
@@ -133,7 +133,7 @@ main.new-layout {
 
 .recorder-text {
   margin-top: 20px;
-  font-size: 1.4em;
+  font-size: 1em;
   font-weight: bold;
   text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
@@ -240,6 +240,52 @@ main.new-layout {
 .popup.error { background: #e74c3c; }
 .popup.success { background: #27ae60; }
 .popup.info { background-color: #007bff; }
+
+
+.file-icon {
+  font-size: 1.5em;
+  color: #ffa600;
+}
+
+.file-name-display {
+  font-weight: bold;
+  margin: 0;
+}
+
+.audio-preview {
+  margin-top: 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.audio-preview.hidden {
+  display: none;
+}
+
+.audio-preview audio {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 10px;
+}
+
+.re-record-btn {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.re-record-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
 
 @keyframes fadeIn {
   from {opacity: 0}

@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fonction pour charger la liste des audios
   function loadAudios() {
-    fetch("/get-audios")
+    fetch("get-audios")
       .then(async res => {
         if (!res.ok) throw new Error("Erreur HTTP " + res.status);
         const data = await res.json();
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tableBody.innerHTML = data.data.map(a => `
             <tr>
               <td>${a.id}</td>
-              <td><audio controls><source src="/${a.audio_path}" type="audio/wav"></audio></td>
+              <td><audio controls><source src="/collecte_data_wolof_mvc/public/${a.audio_path}" type="audio/wav"></audio></td>
               <td class="transcription">${escapeHtml(a.transcription)}</td>
               <td class="traduction">${escapeHtml(a.traduction)}</td>
               <td><button class="delete-btn danger" data-id="${a.id}">Supprimer</button></td>
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Export du dataset
   exportBtn.addEventListener("click", async () => {
     try {
-      const res = await fetch("/export-dataset");
+      const res = await fetch("export-dataset");
       const result = await res.json();
 
       if (result.status === "success") {
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const fd = new FormData();
       fd.append("action", "delete_all");
 
-      const res = await fetch("/delete-audio", {
+      const res = await fetch("delete-audio", {
         method: "POST",
         body: fd
       });
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fd.append("id", id);
 
       try {
-        const res = await fetch("/delete-audio", {
+        const res = await fetch("delete-audio", {
           method: "POST",
           body: fd
         });
