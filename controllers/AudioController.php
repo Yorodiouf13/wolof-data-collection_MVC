@@ -1,4 +1,4 @@
-<?php
+ <?php
 require_once __DIR__ . '/../models/AudioModel.php';
 
 class AudioController
@@ -128,13 +128,25 @@ class AudioController
 
         // Enregistrement en base
         $audio_path_db = "audios/" . $final_name; 
+        // Vérifier que l'utilisateur est connecté et récupérer son uploader_ref
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        $uploader_ref = $_SESSION['uploader_ref'] ?? null;
+        if (!$uploader_ref) {
+            $this->jsonError("Vous devez être connecté pour uploader un audio.");
+            return;
+        }
+
         $success = $this->model->insert(
             $guid,
             $final_name,
             $original_name,
             $audio_path_db,
             $transcription,
-            $traduction
+            $traduction,
+            $uploader_ref
         );
 
         if ($success) {

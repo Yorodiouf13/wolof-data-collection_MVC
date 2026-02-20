@@ -27,6 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
         fileNameDisplay.textContent = "Aucun fichier sélectionné";
       }
       fileNameDisplay.textContent = `Fichier choisi : ${file.name}`;
+      // Afficher le player
+      const audioUrl = URL.createObjectURL(file);
+      previewPlayer.src = audioUrl;
+      audioPreview.classList.remove("hidden");
     } else {
       fileNameDisplay.textContent = "Aucun fichier sélectionné";
     }
@@ -87,8 +91,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  reRecordBtn.addEventListener("click", () => {
+  audioPreview.classList.add("hidden");
+  previewPlayer.src = ""; 
+  audioInput.value = ""; 
+  fileNameDisplay.textContent = "Aucun fichier sélectionné";
+  recorderText.textContent = "Cliquez pour enregistrer";
+  recorderCircle.classList.remove("recording");
+  document.getElementById("transcription").value = "";
+  document.getElementById("traduction").value = "";
+  setTimeout(() => window.location.reload(), 10);
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    // Vérifier statut connexion avant tout
+    try {
+      const statusRes = await fetch('auth-status');
+      const statusTxt = await statusRes.text();
+      const status = JSON.parse(statusTxt);
+      if (!status.logged) {
+        // Afficher modale avec bouton de connexion
+        const overlay = document.createElement('div');
+        overlay.className = 'popup-overlay';
+        
+        const box = document.createElement('div');
+        box.className = 'popup-box';
+        box.style.backgroundColor = '#f39c12';
+        box.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <img src="cadenas.png" width="32" height="32"> 
+            <div style="text-align: left; flex: 1;">Vous devez être connecté pour envoyer un audio</div>
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button id="toLoginBtn" style="background: #ffa600; color: white; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+              Se connecter
+            </button>
+            <button id="cancelLoginBtn" style="background: #e0e0e0; color: #333; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+              Annuler
+            </button>
+          </div>
+        `;
+        
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        
+        setTimeout(() => overlay.classList.add('visible'), 50);
+        
+        document.getElementById('toLoginBtn').addEventListener('click', () => {
+          window.location.href = 'login-user';
+        });
+        
+        document.getElementById('cancelLoginBtn').addEventListener('click', () => {
+          overlay.classList.remove('visible');
+          setTimeout(() => overlay.remove(), 300);
+        });
+        
+        return;
+      }
+    } catch (err) {
+      console.error('Erreur vérification auth:', err);
+      showPopup('Impossible de vérifier la connexion. Réessayez.', 'error');
+      return;
+    }
 
     const formData = new FormData(form);
     const audioFile = formData.get("audio");
@@ -135,31 +201,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  reRecordBtn.addEventListener("click", () => {
-  audioPreview.classList.add("hidden");
-  previewPlayer.src = ""; 
-  audioInput.value = ""; 
-  fileNameDisplay.textContent = "Aucun fichier sélectionné";
-  recorderText.textContent = "Cliquez pour enregistrer";
-  recorderCircle.classList.remove("recording");
-  document.getElementById("transcription").value = "";
-  document.getElementById("traduction").value = "";
-});
 
 });
 
 
-// Fonction popup 
-function showPopup(message, type = "info") {
-  const popup = document.createElement("div");
-  popup.className = `popup ${type}`;
-  popup.textContent = message;
-  document.body.appendChild(popup);
+// Fonction modale élégante pour afficher les messages
+function showPopup(message, type = "info", autoClose = 3000) {
+  const overlay = document.createElement("div");
+  overlay.className = "popup-overlay";
 
-  setTimeout(() => popup.classList.add("visible"), 50);
+  // Déterminer la couleur selon le type
+  let bgColor = "#007bff"; // info
+  let iconEmoji = "ℹ️";
+  if (type === "error") {
+    bgColor = "#e74c3c";
+    iconEmoji = "❌";
+  } else if (type === "success") {
+    bgColor = "#27ae60";
+    iconEmoji = "✓";
+  } else if (type === "warning") {
+    bgColor = "#f39c12";
+    iconEmoji = "⚠️";
+  }
 
-  setTimeout(() => {
-    popup.classList.remove("visible");
-    setTimeout(() => popup.remove(), 400);
-  }, 3000);
+  const box = document.createElement("div");
+  box.className = "popup-box";
+  box.style.backgroundColor = bgColor;
+
+  box.innerHTML = `
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <span style="font-size: 24px; flex-shrink: 0;">${iconEmoji}</span>
+      <div style="flex: 1; text-align: left;">
+        ${message}
+      </div>
+      <button class="popup-close" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; padding: 0; margin-left: 10px;">✕</button>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Animer l'apparition
+  setTimeout(() => overlay.classList.add("visible"), 50);
+
+  // Fermer au clic sur X
+  box.querySelector(".popup-close").addEventListener("click", () => {
+    overlay.classList.remove("visible");
+    setTimeout(() => overlay.remove(), 300);
+  });
+
+  // Auto-fermeture
+  if (autoClose > 0) {
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        overlay.classList.remove("visible");
+        setTimeout(() => overlay.remove(), 300);
+      }
+    }, autoClose);
+  }
 }

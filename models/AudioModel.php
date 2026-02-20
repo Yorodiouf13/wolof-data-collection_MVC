@@ -12,9 +12,9 @@ class AudioModel
 
     public function getAllAudios(): array
     {
-        $sql = "SELECT id, audio_name, audio_path, transcription, traduction 
-                FROM uploads 
-                ORDER BY date_creation DESC"; 
+        $sql = "SELECT id, audio_name, audio_path, transcription, traduction, uploader_ref 
+            FROM uploads 
+            ORDER BY date_creation DESC"; 
 
         $result = $this->conn->query($sql);
 
@@ -113,14 +113,14 @@ class AudioModel
     }
 
    
-    public function insert(string $id, string $audio_name, string $original_name, string $audio_path, string $transcription, string $traduction): bool
+    public function insert(string $id, string $audio_name, string $original_name, string $audio_path, string $transcription, string $traduction, string $uploader_ref): bool
     {
         $stmt = $this->conn->prepare(
-            "INSERT INTO uploads (id, audio_name, original_name, audio_path, transcription, traduction) 
-             VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO uploads (id, audio_name, original_name, audio_path, transcription, traduction, uploader_ref) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
 
-        $stmt->bind_param("ssssss", $id, $audio_name, $original_name, $audio_path, $transcription, $traduction);
+        $stmt->bind_param("sssssss", $id, $audio_name, $original_name, $audio_path, $transcription, $traduction, $uploader_ref);
         $success = $stmt->execute();
         $stmt->close();
 

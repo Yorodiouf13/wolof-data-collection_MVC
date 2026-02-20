@@ -24,30 +24,133 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Structure de la table `uploads`
+-- Structure de la table users
 --
 
-DROP TABLE IF EXISTS `uploads`;
-CREATE TABLE IF NOT EXISTS `uploads` (
-  `id` varchar(20) NOT NULL,
-  `audio_name` varchar(255) NOT NULL,
-  `original_name` varchar(255) DEFAULT NULL,
-  `audio_path` varchar(255) NOT NULL,
-  `transcription` text NOT NULL,
-  `traduction` text NOT NULL,
-  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+DROP TABLE IF EXISTS users;
+CREATE TABLE IF NOT EXISTS users (
+  id varchar(20) NOT NULL,
+  name varchar(255) NOT NULL,
+  email varchar(255) NOT NULL UNIQUE,
+  created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+  last_ip varchar(45),
+  PRIMARY KEY (id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table verifications
+--
+
+DROP TABLE IF EXISTS verifications;
+CREATE TABLE IF NOT EXISTS verifications (
+  id int NOT NULL AUTO_INCREMENT,
+  identifier varchar(255) NOT NULL,
+  type varchar(50) NOT NULL,
+  code varchar(10) NOT NULL,
+  user_data longtext NOT NULL,
+  expires_at datetime NOT NULL,
+  created_at datetime NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table uploads
+--
+
+DROP TABLE IF EXISTS uploads;
+CREATE TABLE IF NOT EXISTS uploads (
+  id varchar(20) NOT NULL,
+  audio_name varchar(255) NOT NULL,
+  original_name varchar(255) DEFAULT NULL,
+  audio_path varchar(255) NOT NULL,
+  transcription text NOT NULL,
+  traduction text NOT NULL,
+  date_creation timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Déchargement des données de la table `uploads`
---
 
-INSERT INTO `uploads` (`id`, `audio_name`, `original_name`, `audio_path`, `transcription`, `traduction`, `date_creation`) VALUES
-('C75ECCC3-5680-445A-B', 'C75ECCC3-5680-445A-B136-32F697BABD63.wav', 'Joker-Aya-version-chipmunk.mp3', 'audios/C75ECCC3-5680-445A-B136-32F697BABD63.wav', 'vdnm', 'vdcbn', '2026-01-12 16:09:57'),
-('8DF68D8F-2436-49E3-A', '8DF68D8F-2436-49E3-A648-C33CDA4DBFE2.wav', 'swoosh-riser-reverb-390309.mp3', 'audios/8DF68D8F-2436-49E3-A648-C33CDA4DBFE2.wav', 'et voilà', 'et voilà encore', '2026-01-02 11:33:15'),
-('8CA19FE2-FF92-448A-B', '8CA19FE2-FF92-448A-B7B8-0603DF7DAD51.wav', 'the-acid-trance-queen-194846.mp3', 'audios/8CA19FE2-FF92-448A-B7B8-0603DF7DAD51.wav', 'revoilà', 'revoilà encore', '2026-01-02 11:33:45'),
-('C05E514D-7FDD-4D4C-A', 'C05E514D-7FDD-4D4C-A791-2BA48E1EDCA2.wav', 'Đồng hồ đếm ngược dành cho ai làm video 10s.mp3', 'audios/C05E514D-7FDD-4D4C-A791-2BA48E1EDCA2.wav', 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi ex tempora nam consequuntur nostrum? Aliquam accusantium quis voluptas earum quo error saepe impedit officia ducimus accusamus vel repellat, dicta vero.', 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi ex tempora nam consequuntur nostrum? Aliquam accusantium quis voluptas earum quo error saepe impedit officia ducimus accusamus vel repellat, dicta vero.', '2026-01-02 11:35:08');
+-- Ajouter colonne uploader_ref pour lier les uploads aux utilisateurs (si manquante)
+ALTER TABLE users
+  ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER email;
+
+ALTER TABLE uploads
+  ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER traduction;
+
+-- Ajouter uploader_ref aux users si besoin
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS uploader_ref VARCHAR(32) DEFAULT NULL;
+
+-- Mettre à jour uploader_ref pour les utilisateurs existants (si vide)
+UPDATE users
+SET uploader_ref = LEFT(MD5(CONCAT(id, NOW(), RAND())), 12)
+WHERE uploader_ref IS NULL OR uploader_ref = '';
+
+-- Ajouter colonnes de gestion/assignation/statut à uploads
+ALTER TABLE uploads
+  ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER traduction,
+  ADD COLUMN assigned_to VARCHAR(32) DEFAULT NULL,
+  ADD COLUMN status CHAR(1) DEFAULT 'E',
+  ADD COLUMN last_modified_by VARCHAR(32) DEFAULT NULL,
+  ADD COLUMN last_modified_at DATETIME DEFAULT NULL,
+  ADD COLUMN rejection_reason VARCHAR(255) DEFAULT NULL;
+
+-- Index utiles
+ALTER TABLE uploads
+  ADD INDEX idx_assigned_to (assigned_to),
+  ADD INDEX idx_status (status);
+
+-- Création de la table admins (linguistes / validateurs)
+DROP TABLE IF EXISTS admins;
+CREATE TABLE IF NOT EXISTS admins (
+  id varchar(32) NOT NULL,
+  name varchar(100) NOT NULL,
+  email varchar(100) DEFAULT NULL,
+  phone varchar(20) DEFAULT NULL,
+  uploader_ref varchar(32) DEFAULT NULL,
+  password_hash varchar(255) DEFAULT NULL,
+  role varchar(50) DEFAULT 'linguist',
+  is_first_login tinyint(1) DEFAULT 1,
+  created_at datetime DEFAULT CURRENT_TIMESTAMP,
+  last_login_at datetime DEFAULT NULL,
+  last_ip varchar(45) DEFAULT NULL,
+  username VARCHAR(50) UNIQUE NOT NULL AFTER email,
+  is_superadmin BOOLEAN DEFAULT FALSE AFTER role
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_admins_email (email),
+  UNIQUE KEY uq_admins_phone (phone)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Création de la table d'audit
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id int NOT NULL AUTO_INCREMENT,
+  audio_id varchar(32) NOT NULL,
+  admin_id varchar(32) DEFAULT NULL,
+  action varchar(50) NOT NULL,
+  old_data longtext,
+  new_data longtext,
+  reason varchar(255) DEFAULT NULL,
+  ip_address varchar(45) DEFAULT NULL,
+  created_at datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO admins (id, name, email, username, password_hash, is_superadmin, is_first_login) 
+VALUES (
+    'super_admin_001',
+    'Super Administrateur',
+    'super@wolof.local',
+    'superadmin',
+    '$2y$10$YMf.wX.Ei0/PpwNGdKnfT.8K8K8K8K8K8K8K8K8K8K8K8K8K8K8K8K8',
+    TRUE,
+    1
+);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion</title>
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+  <header>
+    <h1>Connexion / Inscription</h1>
+    <p>Pour envoyer un audio, vous devez être connecté.</p>
+  </header>
+
+  <main>
+    <form id="loginForm" method="POST" action="request-verification" enctype="multipart/form-data">
+      
+      <label for="name">Nom complet :</label>
+      <input type="text" id="name" name="name" placeholder="Prénom & Nom" required>
+
+      <label for="email">Email :</label>
+      <input type="email" id="email" name="email" placeholder="exemple@gmail.com" required>
+
+      <button type="submit">Se Connecter</button>
+    </form>
+
+    <div id="message"></div>
+  </main>
+
+  <footer>
+    <p>© 2025 Projet IA Wolof en Français | Collecte linguistique</p>
+  </footer>
+
+  <script>
+    // Gestion AJAX simple pour éviter rechargement complet (optionnel)
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const messageDiv = document.getElementById("message");
+
+      try {
+        const res = await fetch("request-verification", {
+          method: "POST",
+          body: formData
+        });
+        const result = await res.json();
+      
+
+        if (result.success) {
+          showPopup("Code OTP envoyé à votre email !", "success");
+          setTimeout(() => window.location.href = result.redirect, 1500);
+        } else {
+          showPopup(result.error, "error");
+        }
+      } catch (err) {
+        showPopup("Erreur de connexion au serveur.", "error");
+      }
+    });
+
+    // Fonction popup 
+    function showPopup(message, type = "info") {
+      const popup = document.createElement("div");
+      popup.className = `popup ${type}`;
+      popup.textContent = message;
+      document.body.appendChild(popup);
+
+      setTimeout(() => popup.classList.add("visible"), 50);
+
+      setTimeout(() => {
+        popup.classList.remove("visible");
+        setTimeout(() => popup.remove(), 400);
+      }, 3000);
+    }
+
+
+  </script>
+</body>
+</html>

@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tableBody.innerHTML = data.data.map(a => `
             <tr>
               <td>${a.id}</td>
-              <td><audio controls><source src="/collecte_data_wolof_mvc/public/${a.audio_path}" type="audio/wav"></audio></td>
+              <td><audio controls><source src="/collecte_data_wolof_mvc/${a.audio_path}" type="audio/wav"></audio></td>
               <td class="transcription">${escapeHtml(a.transcription)}</td>
               <td class="traduction">${escapeHtml(a.traduction)}</td>
               <td><button class="delete-btn danger" data-id="${a.id}">Supprimer</button></td>

@@ -1,12 +1,14 @@
 <?php
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
+session_start();
 
 require_once __DIR__ . '/../controllers/AudioController.php';
+require_once __DIR__ . '/../controllers/AuthController.php';
+require_once __DIR__ . '/../controllers/AdminController.php';
+require_once __DIR__ . '/../controllers/SuperAdminController.php';
 
-$controller = new AudioController();
 
-// Récupération de l'URI une seule fois
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = ltrim($uri, '/');
 
@@ -15,8 +17,10 @@ if (strpos($uri, $basePath) === 0) {
     $uri = substr($uri, strlen($basePath));
 }
 // ==================== ROUTES API ====================
-$apiRoutes = ['get-audios', 'upload', 'delete-audio', 'export-dataset'];
+$apiRoutes = ['get-audios', 'upload', 'delete-audio', 'export-dataset', 'auth-status'];
+
 if (in_array($uri, $apiRoutes)) {
+    $controller = new AudioController();
     switch ($uri) {
         case 'get-audios':
             $controller->getAll();
@@ -29,6 +33,20 @@ if (in_array($uri, $apiRoutes)) {
             break;
         case 'export-dataset':
             $controller->export();
+            break;
+        case 'auth-status':
+            // Renvoie le statut de connexion (session)
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            $logged = isset($_SESSION['user_id']);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'logged' => $logged,
+                'user_name' => $_SESSION['user_name'] ?? null,
+                'user_email' => $_SESSION['user_email'] ?? null,
+                'uploader_ref' => $_SESSION['uploader_ref'] ?? null
+            ]);
             break;
     }
     exit;
@@ -70,10 +88,23 @@ $staticFiles = [
     'index.php'   => 'user/index.html',
     'index.html'  => 'user/index.html',
     'style.css'   => 'user/style.css',
+    'style2.css'  => 'user/style2.css',
     'script.js'   => 'user/script.js',
     'admin.html'  => 'admin/admin.html',
     'style_admin.css' => 'admin/style_admin.css',
     'script_admin.js' => 'admin/script_admin.js',
+    'loginAdmin' => 'admin/loginAdmin.html',
+    'loginAdmin.html' => 'admin/loginAdmin.html',
+    'superadmin-dashboard' => 'admin/superadmin-dashboard.html',
+    'superadmin-dashboard.html' => 'admin/superadmin-dashboard.html',
+    'adminChangePassword' => 'admin/admin-change-password.html',
+    'admin-change-password.html' => 'admin/admin-change-password.html',
+    'script_superadmin.js' => 'admin/script_superadmin.js',
+    'style_superadmin.css' => 'admin/style_superadmin.css',
+    'style_admin-cp.css' => 'admin/style_admin-cp.css',
+    'loginAdmin.js' => 'admin/loginAdmin.js',
+    'admin-change-password.js' => 'admin/admin-change-password.js',
+    'loginAdmin.css' => 'admin/loginAdmin.css'
 ];
 
 
@@ -98,6 +129,113 @@ if (array_key_exists($uri, $staticFiles)) {
         echo "Fichier introuvable sur le serveur : " . $staticFiles[$uri];
         exit;
     }
+}
+
+// ==================== AUTHENTIFICATION ADMIN (username/password) ====================
+if (in_array($uri, ['admin-login', 'admin-change-password', 'admin-logout'])) {
+    
+    $adminCtrl = new AdminController();
+
+    switch ($uri) {
+        case 'admin-login':
+            $result = $adminCtrl->loginAdmin();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+
+        case 'admin-change-password':
+            $result = $adminCtrl->setAdminPassword();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+
+        case 'admin-logout':
+            $result = $adminCtrl->logoutAdmin();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+    }
+}
+
+// ==================== AUTHENTIFICATION USER (OTP) ====================
+if (in_array($uri, ['login-user', 'request-verification', 'verify-user'])) {
+    $auth = new AuthController();
+
+    switch ($uri) {
+        case 'login-user':
+            readfile($viewsPath . 'user/login.html');
+            exit;
+
+        case 'request-verification':
+            $result = $auth->requestUserVerification();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+
+        case 'verify-user':
+            $result = $auth->verifyUserCode();
+            if (isset($result['view'])) {
+                $email = $_GET['email'] ?? '';
+                $html = file_get_contents($viewsPath . $result['view'] . '.html');
+                $html = str_replace('{{email}}', htmlspecialchars($email), $html); 
+                echo $html;
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode($result);
+            }
+            exit;
+    }
+}
+
+// ==================== SUPER ADMIN ROUTES ====================
+$superAdminRoutes = ['superadmin-get-admins', 'superadmin-create-admin', 'superadmin-update-admin', 'superadmin-delete-admin', 
+                     'superadmin-get-users', 'superadmin-delete-user', 
+                     'superadmin-get-audios', 'superadmin-update-audio', 'superadmin-delete-audio'];
+
+if (in_array($uri, $superAdminRoutes)) {
+    $superAdmin = new SuperAdminController();
+    switch ($uri) {
+        case 'superadmin-get-admins':
+            $superAdmin->getAdminsList();
+            break;
+        case 'superadmin-create-admin':
+            $result = $superAdmin->createAdmin();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        case 'superadmin-update-admin':
+            $result = $superAdmin->updateAdmin();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        case 'superadmin-delete-admin':
+            $result = $superAdmin->deleteAdmin();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        case 'superadmin-get-users':
+            $superAdmin->getUsersList();
+            break;
+        case 'superadmin-delete-user':
+            $result = $superAdmin->deleteUser();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        case 'superadmin-get-audios':
+            $superAdmin->getAudiosList();
+            break;
+        case 'superadmin-update-audio':
+            $result = $superAdmin->updateAudio();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        case 'superadmin-delete-audio':
+            $result = $superAdmin->deleteAudio();
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+    }
+    exit;
 }
 
 // ==================== 404 ====================

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérification</title>
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+  <header>
+    <h1>Vérification de votre email</h1>
+    <p>Un code de 6 chiffres vous a été envoyé à <strong id="userEmail"></strong></p>
+  </header>
+
+  <main>
+    <form id="verifyForm" method="POST" action="verify-user" enctype="multipart/form-data">
+      <input type="hidden" name="email" id="emailInput">
+
+      <label for="code">Code OTP :</label>
+      <input type="text" id="code" name="code" maxlength="6" required pattern="[0-9]{6}">
+
+      <button type="submit">Vérifier</button>
+    </form>
+
+    <div id="message"></div>
+
+    <p>Vous n’avez pas reçu le code ? <a href="login-user">Réessayer</a></p>
+  </main>
+
+  <footer>
+    <p>© 2025 Projet IA Wolof en Français | Collecte linguistique</p>
+  </footer>
+
+  <script>
+    // Remplir l’email depuis l’URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    if (email) {
+      document.getElementById("userEmail").textContent = decodeURIComponent(email);
+      document.getElementById("emailInput").value = decodeURIComponent(email);
+    }
+
+    // Gestion AJAX pour la vérification
+    document.getElementById("verifyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const messageDiv = document.getElementById("message");
+
+      try {
+        console.log("Submitting verification form");
+        const res = await fetch("verify-user", {
+          method: "POST",
+          body: formData
+        });
+        console.log("Response received");
+        const result = await res.json();
+        console.log("Result parsed", result);
+
+        if (result.success) {
+          showPopup("Connexion réussie ! Redirection...", "success");
+          setTimeout(() => window.location.href = result.redirect || '/', 1500);
+        } else {
+          showPopup(result.error || "Erreur de vérification.", "error");
+        }
+      } catch (err) {
+        showPopup("Erreur de connexion au serveur.", "error");
+      }
+    });
+
+    // Fonction popup 
+    function showPopup(message, type = "info") {
+      const popup = document.createElement("div");
+      popup.className = `popup ${type}`;
+      popup.textContent = message;
+      document.body.appendChild(popup);
+
+      setTimeout(() => popup.classList.add("visible"), 50);
+
+      setTimeout(() => {
+        popup.classList.remove("visible");
+        setTimeout(() => popup.remove(), 400);
+      }, 3000);
+    }
+
+  </script>
+</body>
+</html>

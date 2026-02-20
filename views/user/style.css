@@ -96,7 +96,7 @@ main.new-layout {
 
 
 .wave-animation {
-  position: relative;
+  position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -109,10 +109,11 @@ main.new-layout {
 .wave-animation::before,
 .wave-animation::after {
   content: '';
-  position: relative;
-  top: 50%;
-  width: 50%;
-  height: 50%;
+  position: absolute;
+  top: 15%;
+  left: 14%;
+  width: 70%;
+  height: 70%;
   border-radius: 100%;
   border: 3px solid rgba(255, 255, 255, 0.4);
   animation: wave 2s infinite ease-out;
@@ -241,6 +242,37 @@ main.new-layout {
 .popup.success { background: #27ae60; }
 .popup.info { background-color: #007bff; }
 
+/* Styles pour les modales de popup */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9500;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.popup-overlay.visible {
+  opacity: 1;
+}
+
+.popup-box {
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  color: white;
+  font-weight: 600;
+  animation: scaleIn 0.3s ease;
+  word-break: break-word;
+}
 
 .file-icon {
   font-size: 1.5em;
