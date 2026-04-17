@@ -3,77 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion</title>
-  <link rel="stylesheet" href="style2.css">
+  <title>Connexion — Collecte Linguistique Wolof</title>
+  <link rel="stylesheet" href="./style2.css">
 </head>
 <body>
 
-  <header>
-    <h1>Connexion / Inscription</h1>
-    <p>Pour envoyer un audio, vous devez être connecté.</p>
-  </header>
+  <div class="header">
+    <h1>Recensement de données Wolof en Français</h1>
+    <p>Connectez-vous pour soumettre vos enregistrements.</p>
+  </div>
 
   <main>
-    <form id="loginForm" method="POST" action="request-verification" enctype="multipart/form-data">
-      
-      <label for="name">Nom complet :</label>
-      <input type="text" id="name" name="name" placeholder="Prénom & Nom" required>
+    <div class="login-card">
+      <h2>Connexion</h2>
+      <p class="subtitle">Entrez votre email et votre numéro de téléphone pour accéder à l'interface.</p>
 
-      <label for="email">Email :</label>
-      <input type="email" id="email" name="email" placeholder="exemple@gmail.com" required>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="identifier">Email ou numéro de téléphone</label>
+          <input type="text" id="identifier" name="identifier" placeholder="email@example.com ou +221 77 123 45 67" autocomplete="off">
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">Se connecter</button>
+      </form>
 
-      <button type="submit">Se Connecter</button>
-    </form>
-
-    <div id="message"></div>
+      <div class="back-link">
+        <a href="./">← Retour à l'accueil</a>
+      </div>
+    </div>
   </main>
 
   <footer>
-    <p>© 2025 Projet IA Wolof en Français | Collecte linguistique</p>
+    <p>© 2026 Projet IA Wolof par SOLID Afrique | Collecte linguistique</p>
   </footer>
 
   <script>
-    // Gestion AJAX simple pour éviter rechargement complet (optionnel)
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    const form = document.getElementById("loginForm");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const messageDiv = document.getElementById("message");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Envoi...";
+
+      const identifier = document.getElementById('identifier').value.trim();
+      if (!identifier) {
+        showToast("Veuillez indiquer votre email ou votre téléphone.", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Se connecter";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('identifier', identifier);
 
       try {
-        const res = await fetch("request-verification", {
-          method: "POST",
-          body: formData
-        });
+        const res = await fetch("request-verification", { method: "POST", body: formData });
         const result = await res.json();
-      
 
         if (result.success) {
-          showPopup("Code OTP envoyé à votre email !", "success");
-          setTimeout(() => window.location.href = result.redirect, 1500);
+          if (result.otp) {
+            localStorage.setItem('verificationCode', result.otp);
+            localStorage.setItem('verificationIdentifier', identifier);
+          }
+          showToast("Code envoyé ! Redirection...", "success");
+          setTimeout(() => window.location.href = result.redirect, 1300);
         } else {
-          showPopup(result.error, "error");
+          showToast(result.error || "Erreur lors de la connexion.", "error");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Se connecter";
         }
-      } catch (err) {
-        showPopup("Erreur de connexion au serveur.", "error");
+      } catch {
+        showToast("Erreur de connexion au serveur.", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Se connecter";
       }
     });
 
-    // Fonction popup 
-    function showPopup(message, type = "info") {
-      const popup = document.createElement("div");
-      popup.className = `popup ${type}`;
-      popup.textContent = message;
-      document.body.appendChild(popup);
-
-      setTimeout(() => popup.classList.add("visible"), 50);
-
-      setTimeout(() => {
-        popup.classList.remove("visible");
-        setTimeout(() => popup.remove(), 400);
-      }, 3000);
+    function showToast(message, type = "info") {
+      const colors = { info: "#007bff", error: "#e74c3c", success: "#27ae60" };
+      const toast  = document.createElement("div");
+      toast.style.cssText = `
+        position:fixed; top:20px; right:-400px; z-index:99999;
+        background:${colors[type]||colors.info}; color:white;
+        padding:14px 20px; border-radius:10px;
+        box-shadow:0 4px 16px rgba(0,0,0,0.3);
+        font-weight:600; font-size:14px; max-width:340px;
+        display:flex; align-items:center; gap:10px;
+        transition:right 0.4s ease; font-family:'Segoe UI',sans-serif;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.style.right = "20px", 50);
+      setTimeout(() => { toast.style.right = "-400px"; setTimeout(() => toast.remove(), 500); }, 4000);
     }
-
-
   </script>
 </body>
 </html>

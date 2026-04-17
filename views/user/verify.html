@@ -9,23 +9,30 @@
 <body>
 
   <header>
-    <h1>Vérification de votre email</h1>
-    <p>Un code de 6 chiffres vous a été envoyé à <strong id="userEmail"></strong></p>
+    <h1>Vérification de votre identifiant</h1>
+    <p>Un code de 6 chiffres vous a été envoyé à <strong id="userIdentifier"></strong></p>
+    <p id="codeHint" class="verify-hint"></p>
   </header>
 
   <main>
-    <form id="verifyForm" method="POST" action="verify-user" enctype="multipart/form-data">
-      <input type="hidden" name="email" id="emailInput">
+    <div class="login-card">
+      <h2>Vérifier votre code</h2>
+      <p class="subtitle">Entrez le code reçu pour accéder à votre espace.</p>
 
-      <label for="code">Code OTP :</label>
-      <input type="text" id="code" name="code" maxlength="6" required pattern="[0-9]{6}">
+      <form id="verifyForm" method="POST" action="verify-user" enctype="multipart/form-data">
+        <input type="hidden" name="identifier" id="identifierInput">
 
-      <button type="submit">Vérifier</button>
-    </form>
+        <div class="form-group">
+          <label for="code">Code OTP :</label>
+          <input type="text" id="code" name="code" maxlength="6" required pattern="[0-9]{6}" placeholder="123456">
+        </div>
 
-    <div id="message"></div>
+        <button type="submit" class="btn-submit">Vérifier</button>
+      </form>
 
-    <p>Vous n’avez pas reçu le code ? <a href="login-user">Réessayer</a></p>
+      <div id="message"></div>
+      <p class="back-link">Vous n’avez pas reçu le code ? <a href="login-user">Réessayer</a></p>
+    </div>
   </main>
 
   <footer>
@@ -35,10 +42,24 @@
   <script>
     // Remplir l’email depuis l’URL
     const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-    if (email) {
-      document.getElementById("userEmail").textContent = decodeURIComponent(email);
-      document.getElementById("emailInput").value = decodeURIComponent(email);
+    const identifier = urlParams.get('identifier');
+    if (identifier) {
+      document.getElementById("userIdentifier").textContent = decodeURIComponent(identifier);
+      document.getElementById("identifierInput").value = decodeURIComponent(identifier);
+    }
+
+    const codeHint = document.getElementById('codeHint');
+    const storedCode = localStorage.getItem('verificationCode');
+    const storedIdentifier = localStorage.getItem('verificationIdentifier');
+    if (storedCode && storedIdentifier === identifier) {
+      codeHint.textContent = `Code temporaire : ${storedCode}`;
+      codeHint.style.color = '#fff';
+      codeHint.style.background = 'rgba(39, 174, 96, 0.18)';
+      codeHint.style.padding = '10px 14px';
+      codeHint.style.borderRadius = '14px';
+      codeHint.style.marginTop = '12px';
+      localStorage.removeItem('verificationCode');
+      localStorage.removeItem('verificationIdentifier');
     }
 
     // Gestion AJAX pour la vérification

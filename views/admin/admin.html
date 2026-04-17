@@ -9,15 +9,35 @@
 <body>
 
   <header>
-    <h1>Back Office - Gestion des Audios</h1>
+    <div class="header-top">
+      <div class="header-left">
+        <h1>Back Office — Gestion des Audios</h1>
+        <span id="roleTag" class="role-tag"></span>
+      </div>
+      <div class="header-right">
+        <span id="adminGreeting" class="admin-greeting"></span>
+        <button id="logoutBtn" class="btn-logout-header">Déconnexion</button>
+      </div>
+    </div>
   </header>
 
   <main>
 
-    <section class="top-actions">
-      <button id="exportBtn" class="actions">Exporter le dataset en JSON</button>
-      <button id="deleteAllBtn" class="danger">Tout supprimer</button>
-    </section>
+    <!-- Barre de recherche + filtres statut -->
+    <div class="filter-bar">
+      <div class="search-inline">
+        <img src="rechercher.png" width="15" height="15" class="search-icon">
+        <input type="text" id="searchInput" placeholder="Rechercher par transcription, traduction, ID...">
+      </div>
+      <!-- Les onglets sont filtrés selon le rôle via JS -->
+      <div class="status-tabs" id="statusTabs">
+        <button class="stab active" data-status="">Tous</button>
+        <button class="stab" data-status="E">E — Envoyé</button>
+        <button class="stab" data-status="V">V — Validé</button>
+        <button class="stab" data-status="R">R — Rejeté</button>
+        <button class="stab" data-status="A">A — Archivé</button>
+      </div>
+    </div>
 
     <section class="table-section">
       <table id="audioTable">
@@ -27,22 +47,58 @@
             <th>Audio</th>
             <th>Transcription</th>
             <th>Traduction</th>
+            <th>Statut</th>
+            <th id="thAssigned" style="display:none;">Pris en charge</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div id="emptyMsg" class="empty-msg" style="display:none;">Aucun audio à afficher.</div>
     </section>
 
-    <div id="message"></div>
-
   </main>
+
+  <!-- Modal édition transcription/traduction -->
+  <div id="editModal" class="confirm-overlay" style="display:none;">
+    <div class="confirm-box wide-box">
+      <h3> Modifier l'audio</h3>
+      <input type="hidden" id="editId">
+      <div class="edit-group">
+        <label>Transcription (Wolof)</label>
+        <textarea id="editTranscription" rows="3" placeholder="Transcription en Wolof..."></textarea>
+      </div>
+      <div class="edit-group">
+        <label>Traduction (Français)</label>
+        <textarea id="editTraduction" rows="3" placeholder="Traduction en Français..."></textarea>
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-no" onclick="closeEditModal()">Annuler</button>
+        <button class="confirm-yes" onclick="submitEdit()"> Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal motif de rejet -->
+  <div id="rejectModal" class="confirm-overlay" style="display:none;">
+    <div class="confirm-box">
+      <h3> Motif de rejet</h3>
+      <input type="hidden" id="rejectId">
+      <div class="edit-group">
+        <label>Raison du rejet</label>
+        <textarea id="rejectReason" rows="3" placeholder="Expliquer pourquoi cet audio est rejeté..."></textarea>
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-no" onclick="closeRejectModal()">Annuler</button>
+        <button class="confirm-yes" style="background:#e74c3c;" onclick="submitReject()">Rejeter</button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <p>© 2026 Projet IA Wolof par SOLID Afrique | Back Office</p>
   </footer>
 
   <script src="script_admin.js"></script>
-
 </body>
 </html>

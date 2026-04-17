@@ -27,9 +27,7 @@ form.addEventListener('submit', async (e) => {
 
         if (data.success) {
             if (data.force_change) {
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 20000);
+                window.location.href = data.redirect;
             } else {
                 window.location.href = data.redirect;
             }

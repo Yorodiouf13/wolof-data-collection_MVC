@@ -1,11 +1,8 @@
-header {
-  background-color: #ffa600;
-  color: white;
-  text-align: center;
-  padding: 1.5em 1em;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+* {
+  box-sizing: border-box;
 }
 
+/* ===== BASE ===== */
 body {
   background: #f8faff;
   color: #222;
@@ -17,26 +14,66 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+/* ===== HEADER ===== */
+header {
+  background-color: #ffa600;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2em 1.5em;
+}
+
+.header-top h1 {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-greeting {
+  font-size: 0.9em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.btn-logout-header {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  padding: 7px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-logout-header:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ===== MAIN ===== */
 main {
   flex: 1;
   padding: 20px;
 }
 
-section{
+/* ===== TOP ACTIONS ===== */
+section.top-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 15px;
-  display: flow-root;
-  justify-content: space-between;
-}
-
-section.danger {
-  display: flex;
-  justify-content: flex-end;
-  margin-right: 50px;
-}
-
-section.actions {
-  display: flex;
-  justify-content: flex-start; 
 }
 
 button {
@@ -47,14 +84,159 @@ button {
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.3s;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
 button:hover {
   background: #c28500;
 }
 
+button.danger {
+  background-color: #e74c3c;
+}
+
+button.danger:hover {
+  background-color: #c0392b;
+}
+
+/* ===== FILTER BAR ===== */
+.filter-bar {
+  background: white;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 8px 12px;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.3s;
+}
+
+.search-inline:focus-within {
+  border-color: #ffa600;
+  box-shadow: 0 0 0 3px rgba(255, 166, 0, 0.1);
+}
+
+.search-inline input {
+  border: none;
+  outline: none;
+  font-size: 13.5px;
+  background: transparent;
+  width: 100%;
+  color: #222;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.search-inline input::placeholder {
+  color: #bbb;
+}
+
+.status-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stab {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.stab.active {
+  background: #ffa600;
+  color: white;
+  border-color: #ffa600;
+}
+
+.stab:hover:not(.active) {
+  border-color: #ffa600;
+  color: #ffa600;
+}
+
+/* ===== GROUPE VALIDATEURS / CONTRÔLEURS ===== */
+.role-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.role-tag.role-validator  { background: #e3f2fd; color: #1565c0; }
+.role-tag.role-controller { background: #f3e5f5; color: #6a1b9a; }
+
+.claimed-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #ffc107;
+}
+
+.control-mine {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.control-other {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #fce4ec;
+  color: #c62828;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.abtn-control {
+  background: #e8eaf6;
+  color: #283593;
+}
+.abtn-control:hover {
+  background: #c5cae9;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ===== TABLE ===== */
 .table-section {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
 }
@@ -69,29 +251,96 @@ th, td {
   text-align: left;
   padding: 12px 15px;
   border-bottom: 1px solid #ddd;
+  font-size: 13.5px;
 }
 
 th {
   background-color: #ffa600;
   color: white;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-tr:hover {
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
   background-color: #f1f1f1;
 }
 
-
-.danger:hover {
-  background: #c20000;
+.id-cell {
+  font-family: monospace;
+  font-size: 12px;
+  color: #999;
 }
 
+.text-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-#message {
-  margin-top: 1em;
+.assigned-cell {
+  color: #555;
+  font-size: 13px;
+}
+
+/* ===== STATUS BADGE ===== */
+.sbadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sbadge-E { background: #e3f2fd; color: #1565c0; }
+.sbadge-V { background: #e8f5e9; color: #2e7d32; }
+.sbadge-R { background: #fce4ec; color: #c62828; }
+.sbadge-A { background: #f3e5f5; color: #6a1b9a; }
+.sbadge-S { background: #eeeeee; color: #555; }
+
+/* ===== ACTION BUTTONS IN TABLE ===== */
+.actions-cell {
+  white-space: nowrap;
+}
+
+.abtn {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin: 2px 2px;
+}
+
+.abtn-edit     { background: #e3f2fd; color: #1565c0; }
+.abtn-edit:hover    { background: #bbdefb; }
+.abtn-validate { background: #e8f5e9; color: #2e7d32; }
+.abtn-validate:hover { background: #c8e6c9; }
+.abtn-reject   { background: #fce4ec; color: #c62828; }
+.abtn-reject:hover  { background: #f8bbd0; }
+.abtn-archive  { background: #f3e5f5; color: #6a1b9a; }
+.abtn-archive:hover { background: #e1bee7; }
+.abtn-delete   { background: #fce4ec; color: #c62828; }
+.abtn-delete:hover  { background: #f8bbd0; }
+
+/* ===== EMPTY MESSAGE ===== */
+.empty-msg {
   text-align: center;
-  font-weight: bold;
+  padding: 40px 20px;
+  color: #bbb;
+  font-size: 15px;
+  background: white;
+  border-radius: 0 0 8px 8px;
 }
 
+/* ===== FOOTER ===== */
 footer {
   text-align: center;
   padding: 1em;
@@ -100,6 +349,7 @@ footer {
   color: #555;
 }
 
+/* ===== POPUP ===== */
 .popup {
   position: fixed;
   top: 20px;
@@ -112,29 +362,19 @@ footer {
   font-weight: bold;
   transition: all 0.5s ease;
   z-index: 9999;
+  max-width: 350px;
 }
 
-.popup.visible {
-  right: 20px;
-}
+.popup.visible { right: 20px; }
+.popup.error   { background: #e74c3c; }
+.popup.success { background: #27ae60; }
+.popup.info    { background-color: #007bff; }
 
-.popup.error {
-  background: #e74c3c;
-}
-
-.popup.success {
-  background: #27ae60;
-}
-
-.popup.info {
-  background-color: #007bff;
-}
-
-
+/* ===== OVERLAY / MODALS ===== */
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -146,66 +386,92 @@ footer {
 .confirm-box {
   background: #fff;
   padding: 25px;
-  border-radius: 14px;
+  border-radius: 10px;
   width: 90%;
   max-width: 420px;
   text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
   animation: scaleIn 0.2s ease;
+}
+
+.wide-box {
+  max-width: 540px;
+  text-align: left;
 }
 
 .confirm-box h3 {
   margin-bottom: 15px;
-  font-size: 20px;
+  font-size: 18px;
   color: #111;
+  text-align: center;
 }
 
+/* ===== EDIT MODAL FIELDS ===== */
+.edit-group {
+  margin-bottom: 14px;
+}
+
+.edit-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.edit-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 13.5px;
+  font-family: 'Segoe UI', sans-serif;
+  resize: vertical;
+  transition: border-color 0.3s;
+}
+
+.edit-group textarea:focus {
+  outline: none;
+  border-color: #ffa600;
+  box-shadow: 0 0 0 3px rgba(255, 166, 0, 0.1);
+}
+
+/* ===== CONFIRM BUTTONS ===== */
 .confirm-actions {
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin-top: 25px;
+  margin-top: 22px;
 }
 
 .confirm-actions button {
   padding: 10px 25px;
-  border-radius: 10px;
+  border-radius: 5px;
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background 0.3s;
+  font-size: 14px;
 }
 
-.confirm-yes {
-  background: #ffa600;
-  color: white;
-}
+.confirm-yes { background: #ffa600; color: white; }
+.confirm-yes:hover { background: #c28500; }
+.confirm-no  { background: #e0e0e0; color: #333; }
+.confirm-no:hover  { background: #bdbdbd; }
 
-.confirm-no {
-  background: #ffa600;
-  color: #ffff;
-}
-
-.confirm-yes:hover {
-  opacity: 0.9;
-  background: #c20000;
-}
-
-.confirm-no:hover {
-  opacity: 0.9;
-  background: #27ae60;
-}
-
-.confirm-actions button:hover {
-  transform: scale(1.05);
+/* ===== MISC ===== */
+#message {
+  margin-top: 1em;
+  text-align: center;
+  font-weight: bold;
 }
 
 @keyframes fadeIn {
-  from {opacity: 0}
-  to {opacity: 1}
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes scaleIn {
-  from {transform: scale(0.9);}
-  to {transform: scale(1);}
+  from { transform: scale(0.9); }
+  to   { transform: scale(1); }
 }

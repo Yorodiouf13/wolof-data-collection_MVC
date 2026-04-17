@@ -5,19 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style_superadmin.css">
     <title>Super Admin Dashboard - Collecte Wolof</title>
-
 </head>
 <body>
     <div class="navbar">
-        <h1>Super Admin Dashboard</h1>
-        <button onclick="logout()">Déconnexion</button>
+        <div class="navbar-brand">
+            <h1>Super Admin</h1>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+            Déconnexion
+        </button>
     </div>
 
     <div class="container">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('admins')">Admins</button>
-            <button class="tab-btn" onclick="switchTab('users')">Utilisateurs</button>
-            <button class="tab-btn" onclick="switchTab('audios')">Audios</button>
+            <button class="tab-btn active" onclick="switchTab('admins', this)">
+                 Admins
+            </button>
+            <button class="tab-btn" onclick="switchTab('users', this)">
+                 Utilisateurs
+            </button>
+            <button class="tab-btn" onclick="switchTab('audios', this)">
+                 Audios
+            </button>
         </div>
 
         <!-- ADMINS TAB -->
@@ -27,21 +36,32 @@
                 <button class="btn-add" onclick="openCreateAdminModal()">+ Créer Admin</button>
             </div>
             <div id="adminsMessage" class="message"></div>
-            <table class="table" id="adminsTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Identifiant</th>
-                        <th>Rôle</th>
-                        <th>Créé le</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="adminsBody">
-                </tbody>
-            </table>
-            <div id="adminsNoData" class="no-data">Aucun admin</div>
+            <div class="search-bar">
+                    <img src="rechercher.png" width="15" height="15" class="search-icon">
+                <input type="text" id="searchAdmins" placeholder="Rechercher par nom, email ou identifiant..." oninput="filterAdmins()">
+                <select id="filterAdminRole" onchange="filterAdmins()" class="status-filter">
+                    <option value="">Tous les rôles</option>
+                    <option value="validator">Validateur</option>
+                    <option value="controller">Contrôleur</option>
+                </select>
+            </div>
+            <div class="table-wrapper">
+                <table class="table" id="adminsTable">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Identifiant</th>
+                            <th>Rôle</th>
+                            <th>Mot de passe temp.</th>
+                            <th>Créé le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsBody"></tbody>
+                </table>
+            </div>
+            <div id="adminsNoData" class="no-data" style="display:none">Aucun admin</div>
         </div>
 
         <!-- USERS TAB -->
@@ -50,42 +70,63 @@
                 <h2>Gestion des Utilisateurs</h2>
             </div>
             <div id="usersMessage" class="message"></div>
-            <table class="table" id="usersTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Créé le</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersBody">
-                </tbody>
-            </table>
-            <div id="usersNoData" class="no-data">Aucun utilisateur</div>
+            <div class="search-bar">
+                <img src="rechercher.png" width="15" height="15" class="search-icon">
+                <input type="text" id="searchUsers" placeholder="Rechercher par nom ou email..." oninput="filterUsers()">
+            </div>
+            <div class="table-wrapper">
+                <table class="table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Référence</th>
+                            <th>Créé le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+            <div id="usersNoData" class="no-data" style="display:none">Aucun utilisateur</div>
         </div>
 
         <!-- AUDIOS TAB -->
         <div id="audios" class="tab-content">
             <div class="section-header">
                 <h2>Gestion des Audios</h2>
+                <button class="btn-add" id="exportDatasetBtn">Exporter dataset</button>
             </div>
             <div id="audiosMessage" class="message"></div>
-            <table class="table" id="audiosTable">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Uploader</th>
-                        <th>Assigné à</th>
-                        <th>Statut</th>
-                        <th>Créé le</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="audiosBody">
-                </tbody>
-            </table>
-            <div id="audiosNoData" class="no-data">Aucun audio</div>
+            <div class="search-bar">
+                <img src="rechercher.png" width="15" height="15" class="search-icon">
+                <input type="text" id="searchAudios" placeholder="Rechercher par nom, uploader, admin assigné..." oninput="filterAudios()">
+                <select id="filterStatus" onchange="filterAudios()" class="status-filter">
+                    <option value="">Tous les statuts</option>
+                    <option value="E">Envoyé (E)</option>
+                    <option value="V">Validé (V)</option>
+                    <option value="C">Contrôlé (C)</option>
+                    <option value="R">Rejeté (R)</option>
+                    <option value="A">Archivé (A)</option>
+                </select>
+            </div>
+            <div class="table-wrapper">
+                <table class="table" id="audiosTable">
+                    <thead>
+                        <tr>
+                            <th>Nom fichier</th>
+                            <th>Uploader</th>
+                            <th>Assigné à</th>
+                            <th>Contrôleur</th>
+                            <th>Statut</th>
+                            <th>Créé le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audiosBody"></tbody>
+                </table>
+            </div>
+            <div id="audiosNoData" class="no-data" style="display:none">Aucun audio</div>
         </div>
     </div>
 
@@ -98,32 +139,105 @@
             </div>
             <form id="createAdminForm" onsubmit="submitCreateAdmin(event)">
                 <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" id="adminName" required>
+                    <label>Nom complet</label>
+                    <input type="text" id="adminName" required placeholder="Ex: Fatou Diallo">
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="adminEmail" required>
+                    <input type="email" id="adminEmail" required placeholder="admin@example.com">
                 </div>
                 <div class="form-group">
                     <label>Identifiant (username)</label>
-                    <input type="text" id="adminUsername" required>
+                    <input type="text" id="adminUsername" required placeholder="Ex: fdiallo">
+                </div>
+                <div class="form-group">
+                    <label>Rôle</label>
+                    <select id="adminRole">
+                        <option value="validator">Validateur</option>
+                        <option value="controller">Contrôleur</option>
+                    </select>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeCreateAdminModal()">Annuler</button>
                     <button type="submit" class="btn-save">Créer</button>
                 </div>
             </form>
-            <div id="tempPasswordMsg" class="temp-password-box" style="display: none;">
-                Mot de passe temporaire: <strong id="tempPasswordValue"></strong>
-                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('tempPasswordValue').textContent)">Copier</button>
+            <div id="tempPasswordMsg" class="temp-password-box" style="display:none">
+                <p class="temp-label"> Admin créé avec succès !</p>
+                <div class="temp-pwd-row">
+                    <span class="temp-pwd-label">Mot de passe temporaire :</span>
+                    <code id="tempPasswordValue" class="temp-pwd-code"></code>
+                    <button class="copy-btn" onclick="copyToClipboard(document.getElementById('tempPasswordValue').textContent)"> Copier</button>
+                
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Modal Éditer Admin -->
+    <div id="editAdminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Éditer Admin</h2>
+                <button class="modal-close" onclick="closeEditAdminModal()">×</button>
             </div>
+            <form id="editAdminForm" onsubmit="submitEditAdmin(event)">
+                <input type="hidden" id="editAdminId">
+                <div class="form-group">
+                    <label>Nom complet</label>
+                    <input type="text" id="editAdminName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editAdminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Rôle</label>
+                    <select id="editAdminRole">
+                        <option value="validator">Validateur</option>
+                        <option value="controller">Contrôleur</option>
+                    </select>
+                </div>
+                <!-- <div class="form-group">
+                    <label>Permissions</label>
+                    <div class="permissions-grid">
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_export" name="permissions[]" value="export">
+                            <span>Export dataset</span>
+                        </label>
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_archive" name="permissions[]" value="archive">
+                            <span>Archiver audios</span>
+                        </label>
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_validate" name="permissions[]" value="validate">
+                            <span>Valider audios</span>
+                        </label>
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_reject" name="permissions[]" value="reject">
+                            <span>Rejeter audios</span>
+                        </label>
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_delete" name="permissions[]" value="delete">
+                            <span>Supprimer audios</span>
+                        </label>
+                        <label class="perm-item">
+                            <input type="checkbox" id="perm_edit_transcription" name="permissions[]" value="edit_transcription">
+                            <span>Modifier transcription</span>
+                        </label>
+                    </div>
+                </div> -->
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditAdminModal()">Annuler</button>
+                    <button type="submit" class="btn-save">Enregistrer</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Modal Éditer Audio -->
     <div id="editAudioModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-wide">
             <div class="modal-header">
                 <h2>Éditer Audio</h2>
                 <button class="modal-close" onclick="closeEditAudioModal()">×</button>
@@ -131,7 +245,7 @@
             <form id="editAudioForm" onsubmit="submitEditAudio(event)">
                 <input type="hidden" id="audioId">
                 <div class="form-group">
-                    <label>Assigné à</label>
+                    <label>Assigné à (admin)</label>
                     <select id="audioAssignedTo">
                         <option value="">Non assigné</option>
                     </select>
@@ -139,19 +253,19 @@
                 <div class="form-group">
                     <label>Statut</label>
                     <select id="audioStatus">
-                        <option value="pending">En attente</option>
-                        <option value="in_progress">En cours</option>
-                        <option value="completed">Complété</option>
-                        <option value="rejected">Rejeté</option>
+                        <option value="E">E — Envoyé</option>
+                        <option value="V">V — Validé</option>
+                        <option value="R">R — Rejeté</option>
+                        <option value="A">A — Archivé</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Transcription</label>
-                    <textarea id="audioTranscription" rows="3"></textarea>
+                    <label>Transcription (Wolof)</label>
+                    <textarea id="audioTranscription" rows="3" placeholder="Transcription en Wolof..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Traduction</label>
-                    <textarea id="audioTranslation" rows="3"></textarea>
+                    <label>Traduction (Français)</label>
+                    <textarea id="audioTranslation" rows="3" placeholder="Traduction en Français..."></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeEditAudioModal()">Annuler</button>

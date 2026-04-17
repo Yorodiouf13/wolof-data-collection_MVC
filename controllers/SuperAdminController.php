@@ -12,86 +12,99 @@ class SuperAdminController {
 
     public function __construct() {
         $this->adminModel = new AdminModel();
-        $this->userModel = new UserModel();
+        $this->userModel  = new UserModel();
         $this->audioModel = new AudioModel();
-        $this->db = getDatabaseConnection();
+        $this->db         = getDatabaseConnection();
     }
 
-    // Protéger : vérifier super admin
-    private function requireSuperAdmin() {
+    private function requireSuperAdmin(): bool {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        if (empty($_SESSION['is_superadmin'])) {
-            return false;
-        }
-        return true;
+        return !empty($_SESSION['is_superadmin']);
     }
 
-    // GET admin list
-    public function getAdminsList() {
-        if (!$this->requireSuperAdmin()) {
-            return ['error' => 'Accès refusé'];
-        }
-
-        $admins = $this->adminModel->getAllAdmins();
+    private function jsonOut($data): void {
         header('Content-Type: application/json');
-        echo json_encode($admins);
+        echo json_encode($data);
         exit;
     }
 
-    // CREATE admin
-    public function createAdmin() {
+    // ===== ADMINS =====
+
+    public function getAdminsList(): void {
+        if (!$this->requireSuperAdmin()) {
+            $this->jsonOut(['error' => 'Accès refusé']);
+        }
+        $this->jsonOut($this->adminModel->getAllAdmins());
+    }
+
+    public function createAdmin(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
+        $name     = trim($_POST['name']     ?? '');
+        $email    = trim($_POST['email']    ?? '');
         $username = trim($_POST['username'] ?? '');
-        $tempPassword = bin2hex(random_bytes(6)); // Auto-generate temp password
+        $role     = trim($_POST['role']     ?? 'validator');
 
         if (empty($name) || empty($email) || empty($username)) {
-            return ['error' => 'Champs requis'];
+            return ['error' => 'Tous les champs sont requis'];
         }
 
+        // Valider le rôle
+        if (!in_array($role, ['validator', 'controller'])) {
+            $role = 'validator';
+        }
+
+        $tempPassword = bin2hex(random_bytes(6)); // 12 caractères hex
+
         try {
-            $adminId = $this->adminModel->createAdmin($name, $email, $username, $tempPassword, false);
-            return ['success' => true, 'admin_id' => $adminId, 'temp_password' => $tempPassword, 'message' => "Admin créé. Mot de passe temporaire: $tempPassword"];
+            $adminId = $this->adminModel->createAdmin($name, $email, $username, $tempPassword, false, $role);
+            return [
+                'success'       => true,
+                'admin_id'      => $adminId,
+                'temp_password' => $tempPassword,
+                'message'       => "Admin créé avec succès.",
+            ];
         } catch (Exception $e) {
-            return ['error' => 'Erreur création admin: ' . $e->getMessage()];
+            return ['error' => 'Erreur création : ' . $e->getMessage()];
         }
     }
 
-    // UPDATE admin
-    public function updateAdmin() {
+    public function updateAdmin(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
-        $id = trim($_POST['id'] ?? '');
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $role = trim($_POST['role'] ?? '');
+        $id   = trim($_POST['id']    ?? '');
+        $name = trim($_POST['name']  ?? '');
+        $email= trim($_POST['email'] ?? '');
+        $role = trim($_POST['role']  ?? 'validator');
 
         if (empty($id) || empty($name) || empty($email)) {
-            return ['error' => 'Champs requis'];
+            return ['error' => 'Champs requis manquants'];
         }
 
-        if ($this->adminModel->updateAdmin($id, $name, $email, $role ?: null)) {
-            return ['success' => true, 'message' => 'Admin mise à jour'];
+        if (!in_array($role, ['validator', 'controller'])) {
+            $role = 'validator';
+        }
+
+        // Les permissions sont recalculées automatiquement depuis le rôle
+        $permissions = AdminModel::ROLE_PERMISSIONS[$role];
+
+        if ($this->adminModel->updateAdmin($id, $name, $email, $role, $permissions)) {
+            return ['success' => true, 'message' => 'Admin mis à jour'];
         }
         return ['error' => 'Erreur mise à jour'];
     }
 
-    // DELETE admin
-    public function deleteAdmin() {
+    public function deleteAdmin(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
         $id = trim($_POST['id'] ?? '');
-        if (empty($id)) {
-            return ['error' => 'ID requis'];
-        }
+        if (empty($id)) return ['error' => 'ID requis'];
 
         if ($this->adminModel->deleteAdmin($id)) {
             return ['success' => true, 'message' => 'Admin supprimé'];
@@ -99,125 +112,118 @@ class SuperAdminController {
         return ['error' => 'Erreur suppression'];
     }
 
-    // GET users list
-    public function getUsersList() {
+    // ===== USERS =====
+
+    public function getUsersList(): void {
         if (!$this->requireSuperAdmin()) {
-            return ['error' => 'Accès refusé'];
+            $this->jsonOut(['error' => 'Accès refusé']);
         }
 
-        $stmt = $this->db->prepare("SELECT id, name, email, created_at FROM users ORDER BY created_at DESC");
+        $stmt = $this->db->prepare(
+            "SELECT id, name, email, uploader_ref, created_at FROM users ORDER BY created_at DESC"
+        );
         $stmt->execute();
         $result = $stmt->get_result();
-        $users = [];
+        $users  = [];
         while ($row = $result->fetch_assoc()) {
             $users[] = $row;
         }
         $stmt->close();
-
-        header('Content-Type: application/json');
-        echo json_encode($users);
-        exit;
+        $this->jsonOut($users);
     }
 
-    // DELETE user
-    public function deleteUser() {
+    public function deleteUser(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
         $id = trim($_POST['id'] ?? '');
-        if (empty($id)) {
-            return ['error' => 'ID requis'];
-        }
+        if (empty($id)) return ['error' => 'ID requis'];
 
-        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id=?");
         $stmt->bind_param("s", $id);
-        if ($stmt->execute()) {
-            $stmt->close();
-            return ['success' => true, 'message' => 'Utilisateur supprimé'];
-        }
+        $ok = $stmt->execute();
         $stmt->close();
-        return ['error' => 'Erreur suppression'];
+
+        return $ok
+            ? ['success' => true, 'message' => 'Utilisateur supprimé']
+            : ['error' => 'Erreur suppression'];
     }
 
-    // GET audios list
-    public function getAudiosList() {
+    // ===== AUDIOS =====
+
+    public function getAudiosList(): void {
         if (!$this->requireSuperAdmin()) {
-            return ['error' => 'Accès refusé'];
+            $this->jsonOut(['error' => 'Accès refusé']);
         }
-
-        $audios = $this->audioModel->getAllAudios();
-        header('Content-Type: application/json');
-        echo json_encode($audios);
-        exit;
+        $this->jsonOut($this->audioModel->getAllAudios());
     }
 
-    // UPDATE audio (assign, edit metadata)
-    public function updateAudio() {
+    public function updateAudio(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
-        $id = trim($_POST['id'] ?? '');
-        $assignedTo = trim($_POST['assigned_to'] ?? '');
-        $status = trim($_POST['status'] ?? '');
+        $id            = trim($_POST['id']            ?? '');
+        $assignedTo    = trim($_POST['assigned_to']   ?? '') ?: null;
+        $status        = trim($_POST['status']         ?? '');
         $transcription = trim($_POST['transcription'] ?? '');
-        $translation = trim($_POST['translation'] ?? '');
+        $translation   = trim($_POST['translation']   ?? '');
 
-        if (empty($id)) {
-            return ['error' => 'ID requis'];
-        }
+        if (empty($id)) return ['error' => 'ID requis'];
 
-        $stmt = $this->db->prepare("UPDATE audios SET assigned_to = ?, status = ?, transcription = ?, translation = ? WHERE id = ?");
-        $stmt->bind_param("sssss", $assignedTo, $status, $transcription, $translation, $id);
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        $adminId = $_SESSION['admin_id'] ?? null;
 
-        if ($stmt->execute()) {
-            $stmt->close();
-            // Log audit
-            $this->logAudit($id, 'update', null, ['status' => $status, 'assigned_to' => $assignedTo]);
-            return ['success' => true, 'message' => 'Audio mise à jour'];
-        }
+        // Assigned_to
+        $stmt = $this->db->prepare("UPDATE uploads SET assigned_to=? WHERE id=?");
+        $stmt->bind_param("ss", $assignedTo, $id);
+        $stmt->execute();
         $stmt->close();
-        return ['error' => 'Erreur mise à jour'];
+
+        // Status + content
+        $this->audioModel->updateStatus($id, $status, $adminId);
+        $this->audioModel->updateContent($id, $transcription, $translation, $adminId);
+
+        $this->logAudit($id, 'superadmin_update', null, ['status' => $status, 'assigned_to' => $assignedTo]);
+        return ['success' => true, 'message' => 'Audio mis à jour'];
     }
 
-    // DELETE audio
-    public function deleteAudio() {
+    public function deleteAudio(): array {
         if (!$this->requireSuperAdmin() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['error' => 'Accès refusé'];
         }
 
         $id = trim($_POST['id'] ?? '');
-        if (empty($id)) {
-            return ['error' => 'ID requis'];
-        }
+        if (empty($id)) return ['error' => 'ID requis'];
 
-        // Get audio details for audit
         $audio = $this->audioModel->getById($id);
-        if (!$audio) {
-            return ['error' => 'Audio non trouvé'];
-        }
+        if (!$audio) return ['error' => 'Audio non trouvé'];
 
         if ($this->audioModel->delete($id)) {
-            $this->logAudit($id, 'delete', $audio, null);
+            $this->logAudit($id, 'superadmin_delete', $audio, null);
             return ['success' => true, 'message' => 'Audio supprimé'];
         }
         return ['error' => 'Erreur suppression'];
     }
 
-    // Log audit action
-    private function logAudit($audioId, $action, $oldData, $newData) {
+    private function logAudit($audioId, $action, $oldData, $newData): void {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         $adminId = $_SESSION['admin_id'] ?? null;
-
-        $stmt = $this->db->prepare("INSERT INTO audit_logs (audio_id, admin_id, action, old_data, new_data, ip_address, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
         $oldJson = json_encode($oldData);
         $newJson = json_encode($newData);
-        $ip = $_SERVER['REMOTE_ADDR'] ?? null;
-        $stmt->bind_param("ssssss", $audioId, $adminId, $action, $oldJson, $newJson, $ip);
-        $stmt->execute();
-        $stmt->close();
+        $ip      = $_SERVER['REMOTE_ADDR'] ?? null;
+        try {
+            $stmt = $this->db->prepare(
+                "INSERT INTO audit_logs (audio_id, admin_id, action, old_data, new_data, ip_address, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())"
+            );
+            $stmt->bind_param("ssssss", $audioId, $adminId, $action, $oldJson, $newJson, $ip);
+            $stmt->execute();
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Audit log error: " . $e->getMessage());
+        }
     }
 }
-
 ?>

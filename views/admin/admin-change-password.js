@@ -102,27 +102,35 @@ form.addEventListener('submit', async (e) => {
     successMsg.classList.remove('show');
 
     try {
-        const response = await fetch('admin-change-password', {
+        const response = await fetch('admin-Change-Password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `old_password=${encodeURIComponent(oldPassword)}&new_password=${encodeURIComponent(newPwd)}`
         });
-        const data = await response.json();
-        console.log('Données JSON changement mot de passe:', data);
+
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (parseError) {
+            console.error('Réponse JSON invalide:', text);
+            throw new Error('Le serveur a renvoyé une réponse inattendue.');
+        }
+
+        if (!response.ok) {
+            const message = data.error || data.message || 'Erreur serveur lors du changement de mot de passe';
+            throw new Error(message);
+        }
 
         if (data.success) {
             successMsg.textContent = data.message || 'Mot de passe changé avec succès';
-            successMsg.classList.add('show');    
+            successMsg.classList.add('show');
             window.location.href = data.redirect;
-                
         } else {
-            errorMsg.textContent = data.error || 'Erreur lors du changement';
-            errorMsg.classList.add('show');
-            submitBtn.style.display = 'block';
-            loading.style.display = 'none';
+            throw new Error(data.error || 'Erreur lors du changement');
         }
     } catch (error) {
-        errorMsg.textContent = 'Erreur réseau';
+        errorMsg.textContent = error.message || 'Erreur réseau';
         errorMsg.classList.add('show');
         submitBtn.style.display = 'block';
         loading.style.display = 'none';

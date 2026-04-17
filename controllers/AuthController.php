@@ -18,55 +18,78 @@ class AuthController {
         $this->verifModel = new VerificationModel();
     }
 
-    // Demande OTP pour inscription/connexion user
+    // Demande de connexion utilisateur par email ou téléphone
     public function requestUserVerification() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['view' => 'user/login'];
         }
 
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-
-
-        if (empty($name) || empty($email)) {
-            return ['error' => 'Nom complet et email obligatoires'];
+        $identifier = trim($_POST['identifier'] ?? '');
+        if (empty($identifier)) {
+            return ['error' => 'Veuillez indiquer votre email ou votre numéro de téléphone.'];
         }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['error' => 'Email invalide'];
+        $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[0-9+\s-]{7,20}$/', $identifier);
+        if (!$isEmail && !$isPhone) {
+            return ['error' => 'Format invalide. Utilisez un email ou un numéro de téléphone.'];
         }
 
-        if ($this->userModel->emailExists($email)) {
-            // Si existe déjà → on traite comme reconnexion (envoi OTP sans créer nouveau user)
-            $existing = $this->userModel->getByEmail($email);
-            $userData = [
-                'id' => $existing['id'],
-                'name' => $existing['name'],
-                'email' => $email,
-                'ip' => $_SERVER['REMOTE_ADDR']
-            ];
+        $user = null;
+        if ($isEmail) {
+            $user = $this->userModel->getByEmail($identifier);
+            if (!$user) {
+                $name   = $this->generateDefaultName($identifier, '');
+                $userId = $this->userModel->createUser($name, $identifier, $_SERVER['REMOTE_ADDR'] ?? '', null);
+                $user   = $this->userModel->getById($userId);
+            }
         } else {
-            // Nouveau user → on stocke temporairement
-            $userData = [
-                'name' => $name,
-                'email' => $email,
-                'ip' => $_SERVER['REMOTE_ADDR']
-            ];
+            $user = $this->userModel->getByPhone($identifier);
+            if (!$user) {
+                // Créer un compte avec le numéro, mais une adresse email reste nécessaire pour l'OTP.
+                $name   = $this->generateDefaultName('', $identifier);
+                $userId = $this->userModel->createUser($name, '', $_SERVER['REMOTE_ADDR'] ?? '', $identifier);
+                $user   = $this->userModel->getById($userId);
+            }
         }
 
-        // OTP
-        $otp = sprintf("%06d", mt_rand(0, 999999));
-        $expires = date('Y-m-d H:i:s', strtotime('+10 minutes'));
-        $created_at = date('Y-m-d H:i:s');
-
-        $this->verifModel->createVerification($email, 'email', $otp, json_encode($userData), $expires, $created_at);
-
-        // Envoi email
-        if (!$this->sendOTPEmail($email, $otp, $name)) {
-            return ['error' => 'Erreur envoi email. Réessayez.'];
+        if (!$user) {
+            return ['error' => 'Impossible de charger ou créer le compte.'];
         }
 
-        return ['success' => true, 'redirect' => 'verify-user?email=' . urlencode($email)];
+        $otp      = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $userData = json_encode([
+            'id'    => $user['id'],
+            'name'  => $user['name'],
+            'email' => $user['email'],
+            'phone' => $user['phone'] ?? null,
+            'ip'    => $_SERVER['REMOTE_ADDR'] ?? null,
+        ]);
+
+        $expires = date('Y-m-d H:i:s', time() + 600);
+        $created = date('Y-m-d H:i:s');
+        $this->verifModel->createVerification($identifier, 'login', $otp, $userData, $expires, $created);
+
+        if (!empty($user['email'])) {
+            if (!$this->sendOTPEmail($user['email'], $otp, $user['name'] ?? $identifier)) {
+                return ['error' => 'Impossible d\'envoyer le code OTP.'];
+            }
+            return ['success' => true, 'message' => 'Un code a été envoyé à votre adresse email.', 'redirect' => 'verify-user?identifier=' . urlencode($identifier)];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Compte créé. Votre code temporaire s’affiche sur la page de vérification.',
+            'redirect' => 'verify-user?identifier=' . urlencode($identifier),
+            'otp' => $otp
+        ];
+    }
+
+    private function generateDefaultName(string $email, string $phone): string {
+        if (!empty($email)) {
+            return 'Utilisateur ' . strstr($email, '@', true);
+        }
+        return 'Utilisateur ' . preg_replace('/[^0-9]/', '', $phone);
     }
 
     private function sendOTPEmail($to, $otp, $name) {
@@ -106,49 +129,46 @@ class AuthController {
     // Vérification du code OTP
     public function verifyUserCode() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = trim($_POST['email'] ?? '');
-            $code  = trim($_POST['code'] ?? '');
+            $identifier = trim($_POST['identifier'] ?? '');
+            $code       = trim($_POST['code'] ?? '');
 
-            if (empty($email) || empty($code)) {
-                return ['error' => 'Code obligatoire'];
+            if (empty($identifier) || empty($code)) {
+                return ['error' => 'Code et identifiant obligatoires'];
             }
 
-            $userData = $this->verifModel->verifyCode($email, $code);
+            $userData = $this->verifModel->verifyCode($identifier, $code);
             if (!$userData) {
                 return ['error' => 'Code invalide ou expiré'];
             }
 
-            // Si nouveau user → créer
-            if (!isset($userData['id'])) {
+            $userId = $userData['id'] ?? null;
+            if (!$userId) {
                 $userId = $this->userModel->createUser(
-                    $userData['name'],
-                    $userData['email'],
-                    $userData['ip']
+                    $userData['name'] ?? $this->generateDefaultName($userData['email'] ?? '', $userData['phone'] ?? ''),
+                    $userData['email'] ?? '',
+                    $_SERVER['REMOTE_ADDR'] ?? '',
+                    $userData['phone'] ?? null
                 );
-            } else {
-                $userId = $userData['id'];
             }
 
-            // Connexion
             if (session_status() !== PHP_SESSION_ACTIVE) {
                 session_start();
             }
 
-            $_SESSION['user_id']   = $userId;
-            $_SESSION['user_name'] = $userData['name'] ?? $this->userModel->getById($userId)['name'];
+            $_SESSION['user_id']    = $userId;
+            $_SESSION['user_name']  = $userData['name'] ?? $this->userModel->getById($userId)['name'];
+            $_SESSION['user_email'] = $userData['email'] ?? $_SESSION['user_email'] ?? null;
+            $_SESSION['user_phone'] = $userData['phone'] ?? $_SESSION['user_phone'] ?? null;
 
-            // Récupérer et stocker uploader_ref pour association d'uploads
             $user = $this->userModel->getById($userId);
             if (!empty($user['uploader_ref'])) {
                 $_SESSION['uploader_ref'] = $user['uploader_ref'];
             }
 
-            // redirection relative vers la racine de l'app (dossier public)
             return ['success' => true, 'message' => 'Connecté avec succès !', 'redirect' => './'];
         }
 
-        // GET : afficher page code
-        $email = trim($_GET['email'] ?? '');
-        return ['view' => 'user/verify', 'email' => $email];
+        $identifier = trim($_GET['identifier'] ?? '');
+        return ['view' => 'user/verify', 'identifier' => $identifier];
     }
 }

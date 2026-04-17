@@ -79,22 +79,12 @@ CREATE TABLE IF NOT EXISTS uploads (
 ALTER TABLE users
   ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER email;
 
-ALTER TABLE uploads
-  ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER traduction;
-
--- Ajouter uploader_ref aux users si besoin
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS uploader_ref VARCHAR(32) DEFAULT NULL;
-
--- Mettre à jour uploader_ref pour les utilisateurs existants (si vide)
-UPDATE users
-SET uploader_ref = LEFT(MD5(CONCAT(id, NOW(), RAND())), 12)
-WHERE uploader_ref IS NULL OR uploader_ref = '';
-
 -- Ajouter colonnes de gestion/assignation/statut à uploads
 ALTER TABLE uploads
   ADD COLUMN uploader_ref VARCHAR(32) DEFAULT NULL AFTER traduction,
   ADD COLUMN assigned_to VARCHAR(32) DEFAULT NULL,
+  ADD COLUMN controlled_by VARCHAR(32) DEFAULT NULL,
+  ADD COLUMN controlled_at DATETIME DEFAULT NULL,
   ADD COLUMN status CHAR(1) DEFAULT 'E',
   ADD COLUMN last_modified_by VARCHAR(32) DEFAULT NULL,
   ADD COLUMN last_modified_at DATETIME DEFAULT NULL,
@@ -103,9 +93,10 @@ ALTER TABLE uploads
 -- Index utiles
 ALTER TABLE uploads
   ADD INDEX idx_assigned_to (assigned_to),
+  ADD INDEX idx_controlled_by (controlled_by),
   ADD INDEX idx_status (status);
 
--- Création de la table admins (linguistes / validateurs)
+-- Création de la table admins ( validateurs / Controleurs)
 DROP TABLE IF EXISTS admins;
 CREATE TABLE IF NOT EXISTS admins (
   id varchar(32) NOT NULL,
@@ -114,7 +105,7 @@ CREATE TABLE IF NOT EXISTS admins (
   phone varchar(20) DEFAULT NULL,
   uploader_ref varchar(32) DEFAULT NULL,
   password_hash varchar(255) DEFAULT NULL,
-  role varchar(50) DEFAULT 'linguist',
+  role varchar(50) DEFAULT 'validator',
   is_first_login tinyint(1) DEFAULT 1,
   created_at datetime DEFAULT CURRENT_TIMESTAMP,
   last_login_at datetime DEFAULT NULL,
@@ -125,6 +116,18 @@ CREATE TABLE IF NOT EXISTS admins (
   UNIQUE KEY uq_admins_email (email),
   UNIQUE KEY uq_admins_phone (phone)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+ALTER TABLE admins 
+  ADD COLUMN temp_password VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN permissions VARCHAR(255) DEFAULT NULL;
+
+-- Mettre à jour les permissions par défaut selon le rôle
+UPDATE admins 
+  SET permissions = 'edit_transcription,validate,reject,delete' WHERE role = 'validator',
+  SET permissions = 'edit_transcription,validate,reject,delete,export,archive' WHERE role = 'controller';
+
+-- Renommer les anciens rôles pour correspondre à la nouvelle structure
+UPDATE admins SET role = 'validator' WHERE role IN ('linguist');
 
 -- Création de la table d'audit
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -146,7 +149,7 @@ VALUES (
     'Super Administrateur',
     'super@wolof.local',
     'superadmin',
-    '$2y$10$YMf.wX.Ei0/PpwNGdKnfT.8K8K8K8K8K8K8K8K8K8K8K8K8K8K8K8K8',
+    '2y$10$3mQqxgjXS0GALa2JjwclKuWqg9ssMcrv./NQT5x8oO6cgEh1uNnra',
     TRUE,
     1
 );

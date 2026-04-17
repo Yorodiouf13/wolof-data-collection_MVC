@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historique des uploads</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>Historique de vos contributions</h1>
+    <p>Modifiez facilement les enregistrements non validés et suivez leur statut.</p>
+  </div>
+
+  <main class="history-page">
+    <section class="history-page-actions">
+      <a class="history-link" href="index.html">← Retour à l'accueil</a>
+      <button id="refreshHistory" class="action-btn">Actualiser</button>
+    </section>
+
+    <div class="history-layout">
+      <aside class="history-sidebar">
+        <div class="history-sidebar-header">
+          <div>
+            <h2>10 derniers audios</h2>
+            <p>Relecture, suppression et suivi rapide.</p>
+          </div>
+        </div>
+        <div id="historySidebarList" class="history-list">
+          <p class="history-empty">Chargement de l'historique...</p>
+        </div>
+      </aside>
+
+      <section class="history-details">
+        <div id="historyDetails" class="history-details-card">
+          <p class="history-empty">Sélectionnez un enregistrement dans la colonne de gauche.</p>
+        </div>
+      </section>
+    </div>
+
+    <div id="editModal" class="edit-modal hidden">
+      <div class="edit-modal-content">
+        <h2>Modifier l'audio</h2>
+        <form id="editUploadForm">
+          <input type="hidden" id="editUploadId" />
+          <label for="editTranscription">Transcription</label>
+          <textarea id="editTranscription" rows="3" required></textarea>
+          <label for="editTraduction">Traduction</label>
+          <textarea id="editTraduction" rows="3" required></textarea>
+          <div class="modal-actions">
+            <button type="button" id="cancelEdit" class="abtn abtn-cancel">Annuler</button>
+            <button type="submit" id="saveEdit" class="abtn abtn-validate">Enregistrer</button>
+          </div>
+          <p id="editFeedback" class="edit-feedback"></p>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="history.js"></script>
+</body>
+</html>
